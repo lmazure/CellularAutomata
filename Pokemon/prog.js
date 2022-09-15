@@ -1,31 +1,29 @@
 window.onload = function () {
 
-    const COLORMAP = [
-        { 'r': 0, 'g': 0, 'b': 0 },
-        { 'r': 63, 'g': 0, 'b': 0 },
-        { 'r': 127, 'g': 0, 'b': 0 },
-        { 'r': 191, 'g': 0, 'b': 0 },
-        //{ 'r': 255, 'g': 0, 'b': 0 },
-        //{ 'r': 255, 'g': 63, 'b': 0 },
-        //{ 'r': 255, 'g': 127, 'b': 0 },
-        //{ 'r': 255, 'g': 191, 'b': 0 },
-        //{ 'r': 255, 'g': 255, 'b': 0 },
-        //{ 'r': 255, 'g': 255, 'b': 63 },
-        //{ 'r': 255, 'g': 255, 'b': 127 },
-        //{ 'r': 255, 'g': 255, 'b': 191 },
-        //{ 'r': 255, 'g': 255, 'b': 255 },
-    ]
-    const NBCOLORS= COLORMAP.length;
+    const queryString = window.location.search;
+    const params = new URLSearchParams(queryString);
+    const NB_COLORS = params.has('nb_generations') ? parseInt(params.get('nb_generations'), 10) : 4;
+    const THRESHOLD = params.has('threshold') ? parseInt(params.get('threshold'), 10) : 3;
+
+    const COLORMAP = [];
+    for (let i = 0; i < NB_COLORS; i++) {
+        const val = (i * 511) / (NB_COLORS - 1);
+        const r = Math.floor(Math.min(255, val));
+        const g = Math.floor(Math.max(val - 256, 0));
+        const b = 0;
+        COLORMAP[i] = { 'r': r, 'g': g, 'b': b };
+    }
 
     const KERNEL = [
         1, 1, 1,
         1, 0, 1,
         1, 1, 1,
         ];
-    const THRESHOLD = 3;
 
     // Get the canvas and context
     const canvas = document.getElementById("viewport");
+    canvas.width = params.has('width') ? parseInt(params.get('width'), 10) : (window.innerWidth - 0);
+    canvas.height = params.has('height') ? parseInt(params.get('height'), 10) : (window.innerHeight - 0);
     const imagew = canvas.width;
     const imageh = canvas.height;
     const context = canvas.getContext("2d");
@@ -33,10 +31,10 @@ window.onload = function () {
 
     const cell = new Array(imagew * imageh);
 
-    // Initialize the game
+    // Initialize the arena
     function init() {
         for (let i = 0; i < imageh * imagew; i++) {
-            cell[i] = Math.floor(Math.random() * NBCOLORS);
+            cell[i] = Math.floor(Math.random() * NB_COLORS);
         }
     }
 
@@ -54,7 +52,7 @@ window.onload = function () {
                 if (afterX == imagew) afterX = 0;
                     const v = cell[y * imagew + x];
                     let nextV = v + 1;
-                    if (nextV === NBCOLORS) nextV = 0;
+                    if (nextV === NB_COLORS) nextV = 0;
                     let total = 0;
                     if (cell[beforeY * imagew + beforeX] === nextV) total += KERNEL[0];
                     if (cell[beforeY * imagew +       x] === nextV) total += KERNEL[1];
